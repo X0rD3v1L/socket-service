@@ -14,6 +14,11 @@ io.on("connection", (socket) => {
   socket.on("deployed_contract_address", (data) => {
     socket.to(data.room).emit("received_contract_address", data);
   });
+
+  socket.on("opponent_move", (data) => {
+    socket.to(data.room).emit("received_opponent_move", data);
+  });
+
 });
 
 http.listen(port, () => {
