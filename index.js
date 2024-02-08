@@ -18,6 +18,11 @@ io.on("connection", (socket) => {
   socket.on("opponent_move", (data) => {
     socket.to(data.room).emit("received_opponent_move", data);
   });
+  
+  socket.on("initator_move", (data) => {
+    socket.to(data.room).emit("received_initator_move", data);
+  });
+
 
 });
 
