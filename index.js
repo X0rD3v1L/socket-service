@@ -4,18 +4,19 @@ const io = require('socket.io')(http, {cors: {origin: '*', methods: ["GET", "POS
 const port = process.env.PORT || 3000;
 
 let roomConnections = {};
-
+let opponentAddress = "";
 io.on("connection", (socket) => {
   
   socket.on("join_room", (data) => {
     socket.join(data);
     if (!roomConnections[data.room]) {
       roomConnections[data.room] = 0;
+      opponentAddress = data.address;
     }
     roomConnections[data.room]++;
 
-    if (roomConnections[data.room] === 2) {
-      io.to(data).emit("both_players_joined", data);
+    if (roomConnections[data.room] === 2 && opponentAddress === data.address) {
+      io.to(data.room).emit("both_players_joined", data);
     }
   });
 
