@@ -9,7 +9,7 @@ io.on("connection", (socket) => {
   socket.on("join_room", (data) => {
     totalConnections += 1;
     if(totalConnections == 2){
-	socket.emit("both_players_joined",data);
+	socket.to(data.room).emit("both_players_joined",data);
     }
     socket.join(data);
   });
