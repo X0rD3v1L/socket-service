@@ -15,7 +15,7 @@ io.on("connection", (socket) => {
     roomConnections[data.room]++;
 
     if (roomConnections[data.room] === 2) {
-      io.to(data.room).emit("both_players_joined", data);
+      io.to(data).emit("both_players_joined", data);
     }
   });
 
