@@ -1,42 +1,59 @@
 const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http, {cors: {origin: '*', methods: ["GET", "POST"]}});
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 1337;
 
-let roomConnections = {};
+const userList = {};
 
 io.on("connection", (socket) => {
-  
-  socket.on("join_room", (data) => {
-    socket.join(data);
-    if (!roomConnections[data]) {
-      roomConnections[data] = 0;
-    }
-    roomConnections[data]++;
 
-    if (roomConnections[data] === 2) {
-      io.to(data).emit("both_players_joined", data);
-    }
+  socket.on("join_room", (data) => {
+    userList[socket.id] = data.user_address;
+    socket.join(data.room);
+    io.to(data.room).emit("update_users", Object.values(userList));
   });
 
+  socket.on("join_game", (data) => {
+    socket.join(data.room);
+    io.to(data.room).emit("new_player_joined", data);
+  });
+
+  socket.on("change_room", (data) => {
+    socket.leave(data.oldRoom);
+    socket.join(data.room);
+  })
+
+
+  socket.on("brodcast_winner", (data) => {
+    socket.to(data.room).emit("received_winner", data.winners);
+  });
+
+  socket.on("brodcast_join_game", (data) => {
+    socket.to(data.room).emit("received_join_game", data);
+  });
+
+
   socket.on("deployed_contract_address", (data) => {
-    socket.to(data.room).emit("received_contract_address", data);
+    socket.to(data.room).emit("received_contract_address", data.contract);
   });
 
   socket.on("opponent_move", (data) => {
     socket.to(data.room).emit("received_opponent_move", data);
   });
-  
+
   socket.on("initiator_move", (data) => {
     socket.to(data.room).emit("received_initiator_move", data);
   });
 
+  socket.on("brodcast_end_game", (data) => {
+    socket.to(data.oldRoom).emit("received_end_game", data);
+    socket.leave(data.oldRoom);
+    socket.join(data.room);
+  });
+
   socket.on("disconnect", () => {
-    Object.keys(roomConnections).forEach(room => {
-      if (roomConnections[room] > 0) {
-        roomConnections[room]--;
-      }
-    });
+    delete userList[socket.id];
+    io.to(1).emit("update_users", Object.values(userList));
   });
 });
 
